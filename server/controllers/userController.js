@@ -1,5 +1,6 @@
-import { generatetoken } from "../lib/utils";
-import User from "../modules/User";
+import cloudinary from "../lib/cloudinary.js";
+import { generatetoken } from "../lib/utils.js";
+import User from "../modules/User.js";
 import bcrypt from 'bcryptjs'
 export const signup = async (req,res)=>{
   const {fullName,email,password,bio}=req.body;
@@ -47,4 +48,21 @@ export const login=async (req,res)=>{
 
 export const checkAuth=(req,res)=>{
   res.json({success:true,user:req.user})
+}
+
+export const updateProfile = async (req,res)=>{
+  try {
+    const {profilePic,bio,fullName}=req.body;
+    const userId=req.user._id;
+    let updatedUser;
+    if(!profilePic){
+     updatedUser = await User.findByIdAndUpdate(userId,{bio,fullName},{new:true});
+    } else{
+      const upload=await cloudinary.uploader.upload(profilePic)
+      updatedUser=await User.findByIdAndUpdate(userId,{profilePic:upload.secure_url,bio,fullName},{new:true})
+    }
+    res.json({success:true,user:updatedUser,message:"Profile Updated"})
+  } catch (error) {
+    res.json({success:false,message:error.message})
+  }
 }
