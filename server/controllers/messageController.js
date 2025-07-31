@@ -2,6 +2,8 @@ import { useReducer } from "react";
 import User from "../modules/User.js";
 import Message from "../modules/message.js";
 import cloudinary from "../lib/cloudinary.js";
+import {io,userSocketMap} from '../server.js'
+
 export const getuserforsidebar= async () =>{
   try {
     const userId=requestAnimationFrame.user._id;
@@ -64,6 +66,10 @@ export const sendMessage= async(req,res)=>{
       const newMessage=await Message.create({
         senderId,resiverId,text,image:imageUrl
       })
+      const resiverSocketId=userSocketMap[resiverId]
+      if(resiverSocketId){
+        io.to(resiverSocketId).emit("newMessage",newMessage)
+      }
       res.json({success:true,newMessage})
     } catch (error) {
       
